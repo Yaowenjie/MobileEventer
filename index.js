@@ -4,7 +4,7 @@ var nightmare = Nightmare({
   show: false
 });
 
-var scope = [43000, 45000];
+var scope = [40000, 45000];
 
 nightmare.on('console', function (type, msg) {
   console.log(msg);
@@ -18,17 +18,20 @@ var run = function * () {
     process.stdout.write('>');
     var title = yield nightmare
       .goto(theUrl)
-      .wait(100)
+      .wait(120)
       .evaluate(function (theUrl) {
-        var ele = document.querySelector('div.top');
-        var isDisplay = window.getComputedStyle(ele, null).getPropertyValue("display") !== 'none';
-        if (isDisplay) {
+        var bodyClass = document.getElementsByTagName("body")[0].className;
+        var topEle = document.querySelector('div.top');
+        var isTopShow = window.getComputedStyle(topEle, null).getPropertyValue("display") !== 'none';
+        if (bodyClass.indexOf('status') !== -1 && isTopShow) {
           var startEle = document.querySelector('div.part.start');
-          var isStartDisplay = window.getComputedStyle(startEle, null).getPropertyValue("display") !== 'none';
-          if (isStartDisplay) {
-            console.log('The Url has activity:' + theUrl);
-            return theUrl;
+          var isStartShow = window.getComputedStyle(startEle, null).getPropertyValue("display") !== 'none';
+          if (bodyClass === 'status-start' && isStartShow) {
+            console.log('\n进行中活动: ' + theUrl);
+          } else {
+            console.log('\n过期活动: ' + theUrl);
           }
+          return theUrl;
         }
       }, theUrl)
       .title();
@@ -40,5 +43,8 @@ var run = function * () {
 
 vo(run)(function(err, titles) {
   // console.dir(titles);
+  if (err) {
+    console.log('err:', err);
+  }
   console.log('done');
 });
